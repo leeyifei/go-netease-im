@@ -64,9 +64,9 @@ func (this *Netease_im) Upload_file() {
 
 
 // 上传文件
-// @param file_path 文件绝对路径
-// @return1 Upload_response
-// @return2 Error
+// @param string file_path 文件绝对路径
+// @return1 *Upload_response
+// @return2 error
 func (this *Netease_im) Upload_image_multipart(file_path string) (*Upload_image_response, error) {
 	var file_size int64 = 0
 	var file_width, file_height int = 0, 0
@@ -154,12 +154,14 @@ func (this *Netease_im) Upload_image_multipart(file_path string) (*Upload_image_
 }
 
 // 发送单条文本信息
-// @param from 发送者ID
-// @param to 接受者ID
-// @param msg 消息内容
-// @param option 消息选项 {"push":false,"roam":true,"history":false,"sendersync":true,"route":false,"badge":false,"needPushNick":true}
-// @param pushcontent 推送内容
-// @param payload ios 推送对应的payload
+// @param string from 发送者ID
+// @param string to 接受者ID
+// @param string msg 消息内容
+// @param map[string]bool option 消息选项 {"push":false,"roam":true,"history":false,"sendersync":true,"route":false,"badge":false,"needPushNick":true}
+// @param string pushcontent 推送内容
+// @param string payload ios 推送对应的payload
+// @return *Send_singleessage_response
+// @return error
 func (this *Netease_im) Send_single_text_message(from string, to string, msg string, option map[string]bool, pushcontent string, payload string) (*Send_singleessage_response, error) {
 	body := make(map[string]interface{})
 	body["msg"] = msg
@@ -171,6 +173,14 @@ func (this *Netease_im) Send_single_text_message(from string, to string, msg str
 }
 
 // 发送单条图片消息
+// @param string from
+// @param string to
+// @param string file_path
+// @param map[string]bool option
+// @param string pushcontent
+// @param string payload
+// @return *Send_singleessage_response
+// @return error
 func (this *Netease_im) Send_single_image_message(from string, to string, file_path string, option map[string]bool, pushcontent string, payload string) (*Send_singleessage_response, error) {
 	// 上传图片文件
 	upload_resp, err := this.Upload_image_multipart(file_path)
