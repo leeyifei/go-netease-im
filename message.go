@@ -206,6 +206,43 @@ func (this *Netease_im) Send_single_image_message(from string, to string, file_p
 	return dict, nil
 }
 
+// 批量发送多人文本消息
+func (this *Netease_im) Send_multi_text_message(from string, to []string, msg string, option map[string]bool, pushcontent string, payload string) (*Send_multimessage_response, error) {
+	body := make(map[string]interface{})
+	body["msg"] = msg
+	dict, err := this.send_multi_message(from, to, "0" ,body, option, pushcontent, payload)
+	if err != nil {
+		return nil, err
+	}
+	return dict, nil
+}
+
+// 批量发送多人图片消息
+func (this *Netease_im) Send_multi_image_message(from string, to []string, file_path string, option map[string]bool, pushcontent string, payload string) (*Send_multimessage_response, error) {
+	upload_resp, err := this.Upload_image_multipart(file_path)
+	if err != nil {
+		return nil, err
+	}
+
+	if upload_resp.Is_success() != true {
+		return nil, errors.New("upload file fail")
+	}
+
+	body := make(map[string]interface{})
+	body["name"] = upload_resp.Name
+	body["ext"] = upload_resp.Ext[1:]
+	body["md5"] = upload_resp.Md5
+	body["url"] = upload_resp.Url
+	body["w"] = upload_resp.W
+	body["h"] = upload_resp.H
+	body["size"] = upload_resp.Size
+	dict, err := this.send_multi_message(from, to, "1", body, option, pushcontent, payload)
+	if err != nil {
+		return nil, err
+	}
+	return dict, nil
+}
+
 // 发送单条信息
 // @param from 发送者ID
 // @param to 接受者ID
