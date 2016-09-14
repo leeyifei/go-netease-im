@@ -110,9 +110,6 @@ func (this *Netease_im) get_nonce(length int) {
 		result = append(result, bytes[r.Intn(len(bytes))])
 	}
 	this.nonce = string(result)
-	if this.Debug {
-		fmt.Print(fmt.Sprintf("%s\n", this.nonce))
-	}
 }
 
 
@@ -122,9 +119,6 @@ func (this *Netease_im) get_cur_time() {
 	cur := time.Now().Unix()
 	cur_str = strconv.FormatInt(cur, 10)
 	this.curtime = cur_str
-	if this.Debug {
-		fmt.Print(fmt.Sprintf("%s\n", this.curtime))
-	}
 }
 
 
@@ -135,8 +129,4 @@ func (this *Netease_im) get_checksum() {
 	sha1_encoder.Write([]byte(init_string))
 	binary_string := sha1_encoder.Sum(nil)
 	this.checksum = fmt.Sprintf("%x", binary_string)
-	if this.Debug {
-		fmt.Print(fmt.Sprintf("%s\n", this.checksum))
-	}
-
 }

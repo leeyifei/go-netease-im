@@ -49,9 +49,13 @@ type Send_singleessage_response struct {
 	Netease_base_response
 }
 
+type Unregister struct {
+	User string
+}
+
 // 多条消息响应结构
 type Send_multimessage_response struct {
-	Unregsiter []string `json:"unregister, omitempty"`
+	Unregister string `json:"unregister, omitempty"`
 	Netease_base_response
 }
 

@@ -3,6 +3,7 @@ package netease_im
 import (
 	"testing"
 	"fmt"
+	"encoding/json"
 )
 
 var net_ease *Netease_im
@@ -76,9 +77,9 @@ func TestSend_multi_text_message(t *testing.T) {
 	} else {
 		if response.Is_success() {
 			fmt.Printf("test TestSend_multi_text_message success \n")
-			if len(response.Unregsiter) > 0 {
+			if len(response.Unregister) > 0 {
 				fmt.Printf("unregister users:\n")
-				for _, user := range response.Unregsiter {
+				for _, user := range response.Unregister {
 					fmt.Printf("\t%s\n", user)
 				}
 			}
@@ -95,14 +96,20 @@ func TestSend_multi_image_message(t *testing.T) {
 	to := []string{"1", "2", "3" , "111"}
 	response, err := net_ease.Send_multi_image_message("1", to, "/Users/leeyifiei/Pictures/111.png", option, "test send multi image message", "")
 	if err != nil {
-		fmt.Printf("Test TestSend_multi_text_message occur error =====> %s\n", err.Error())
+		fmt.Printf("Test TestSend_multi_image_message occur error =====> %s\n", err.Error())
 	} else {
 		if response.Is_success() {
-			fmt.Printf("test TestSend_multi_text_message success \n")
-			if len(response.Unregsiter) > 0 {
-				fmt.Printf("unregister users:\n")
-				for _, user := range response.Unregsiter {
-					fmt.Printf("\t%s\n", user)
+			fmt.Printf("test TestSend_multi_image_message success \n")
+			if len(response.Unregister) > 0 {
+				fmt.Printf("unregister users %s:\n", response.Unregister)
+				var user_map []string
+				err := json.Unmarshal([]byte(response.Unregister), &user_map)
+				if err != nil {
+					fmt.Printf("test TestSend_multi_image_message unregister json unserialize fail")
+				} else {
+					for _, user := range user_map {
+						fmt.Printf("%s\n", user)
+					}
 				}
 			}
 		} else {
