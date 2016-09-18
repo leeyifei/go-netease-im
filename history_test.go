@@ -13,17 +13,17 @@ func init() {
 }
 */
 
-func TestUser_message_history(t *testing.T) {
-	response, err := net_ease.User_message_history("1", "2", "1473134400000", "1473350399000", "100", true)
+func TestUserMessageHistory(t *testing.T) {
+	response, err := netEase.UserMessageHistory("1", "2", "1473134400000", "1473350399000", "100", true)
 	if err != nil {
 		fmt.Printf("test TestUser_message_history occur error =====> %v\n", err)
 	} else {
-		if response.Is_success() {
+		if response.IsSuccess() {
 			fmt.Printf("test TestUser_message_history success \n")
 			msg_lists := response.Msgs
 			if length := len(msg_lists) ; length > 0 {
 				for idx, msg := range msg_lists {
-					switch msg.Get_message_type() {
+					switch msg.GetMessageType() {
 					case 0:
 						fmt.Printf("the %d is a text message\n", idx)
 						fmt.Printf("    message : %s\n", msg.Body["msg"])
@@ -40,8 +40,8 @@ func TestUser_message_history(t *testing.T) {
 				}
 			}
 		} else {
-			fmt.Printf("test TestUser_message_history fail code =====> %d\n", response.Fail_code())
-			fmt.Printf("test TestUser_message_history fail reason ====> %s\n", response.Fail_reason())
+			fmt.Printf("test TestUser_message_history fail code =====> %d\n", response.FailCode())
+			fmt.Printf("test TestUser_message_history fail reason ====> %s\n", response.FailReason())
 		}
 	}
 }

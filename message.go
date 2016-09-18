@@ -28,14 +28,14 @@ const (
 )
 
 // 上传文件响应结构
-type Upload_response struct {
-	Netease_base_response
+type UploadResponse struct {
+	NeteaseBaseResponse
 	Url string `json:"url, omitempty"`
 }
 
 // 上传图片文件响应结构
-type Upload_image_response struct {
-	Upload_response
+type UploadImageResponse struct {
+	UploadResponse
 	Name string
 	Ext string
 	Md5 string
@@ -45,8 +45,8 @@ type Upload_image_response struct {
 }
 
 // 单条消息响应结构
-type Send_singleessage_response struct {
-	Netease_base_response
+type SendSingleMessageResponse struct {
+	NeteaseBaseResponse
 }
 
 type Unregister struct {
@@ -54,62 +54,62 @@ type Unregister struct {
 }
 
 // 多条消息响应结构
-type Send_multimessage_response struct {
+type SendMultimessageResponse struct {
 	Unregister string `json:"unregister, omitempty"`
-	Netease_base_response
+	NeteaseBaseResponse
 }
 
 
 
 // 流形式上传文件,TODO
-func (this *Netease_im) Upload_file() {
+func (this *NeteaseIm) UploadFile() {
 
 }
 
 
-// 上传文件
+// 表单形式上传文件
 // @param string file_path 文件绝对路径
 // @return1 *Upload_response
 // @return2 error
-func (this *Netease_im) Upload_image_multipart(file_path string) (*Upload_image_response, error) {
-	var file_size int64 = 0
-	var file_width, file_height int = 0, 0
-	var file_name, file_ext, file_md5 string = "", "", ""
-	file, err := os.Open(file_path)
+func (this *NeteaseIm) UploadImageMultipart(filePath string) (*UploadImageResponse, error) {
+	var fileSize int64 = 0
+	var fileWidth, fileHeight int = 0, 0
+	var fileName, fileExt, fileMd5 string = "", "", ""
+	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
 	// 获取文件内容 md5
-	file_content, err := ioutil.ReadFile(file_path)
+	fileContent, err := ioutil.ReadFile(filePath)
 	if err == nil {
 		encoder := md5.New()
-		encoder.Write(file_content)
-		file_md5 = hex.EncodeToString(encoder.Sum(nil))
+		encoder.Write(fileContent)
+		fileMd5 = hex.EncodeToString(encoder.Sum(nil))
 	}
 
 	// 获取文件大小
 	fs, err := file.Stat()
 	if err != nil {
-		file_size = 0
+		fileSize = 0
 	}
 	// 文件大小
-	file_size = fs.Size()
+	fileSize = fs.Size()
 	// 文件名
-	file_name = fs.Name()
+	fileName = fs.Name()
 	// 扩展名
-	file_ext = filepath.Ext(file_path)
+	fileExt = filepath.Ext(filePath)
 	// 获取图片宽,高等信息
 	im, _, err := image.DecodeConfig(file)
 	if err == nil {
-		file_width = im.Width
-		file_height = im.Height
+		fileWidth = im.Width
+		fileHeight = im.Height
 	}
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile("content", filepath.Base(file_path))
+	part, err := writer.CreateFormFile("content", filepath.Base(filePath))
 	if err != nil {
 		return nil, err
 	}
@@ -125,9 +125,9 @@ func (this *Netease_im) Upload_image_multipart(file_path string) (*Upload_image_
 	request, _ := http.NewRequest("POST", EASE_IM_HOST + UPLOAD_FILE_MULTIPART_PATH, body)
 	request.Header.Add("Content-Type", writer.FormDataContentType())
 
-	this.get_nonce(128)
-	this.get_cur_time()
-	this.get_checksum()
+	this.getNonce(128)
+	this.getCurTime()
+	this.getChecksum()
 
 	request.Header.Add("AppKey", this.AppKey)
 	request.Header.Add("Nonce", this.nonce)
@@ -143,17 +143,17 @@ func (this *Netease_im) Upload_image_multipart(file_path string) (*Upload_image_
 	if err != nil {
 		return nil, err
 	}
-	dict, err := this.json_unserialize(new(Upload_image_response), string(data))
+	dict, err := this.json_unserialize(new(UploadImageResponse), string(data))
 	if err != nil {
 		return nil, err
 	}
-	image_info := dict.(*Upload_image_response)
-	image_info.Size = file_size
-	image_info.Name = file_name
-	image_info.Ext = file_ext
-	image_info.W = file_width
-	image_info.H = file_height
-	image_info.Md5 = file_md5
+	image_info := dict.(*UploadImageResponse)
+	image_info.Size = fileSize
+	image_info.Name = fileName
+	image_info.Ext = fileExt
+	image_info.W = fileWidth
+	image_info.H = fileHeight
+	image_info.Md5 = fileMd5
 	return image_info, nil
 }
 
@@ -166,10 +166,10 @@ func (this *Netease_im) Upload_image_multipart(file_path string) (*Upload_image_
 // @param string payload ios 推送对应的payload
 // @return *Send_singleessage_response
 // @return error
-func (this *Netease_im) Send_single_text_message(from string, to string, msg string, option map[string]bool, pushcontent string, payload string) (*Send_singleessage_response, error) {
+func (this *NeteaseIm) SendSingleTextMessage(from string, to string, msg string, option map[string]bool, pushcontent string, payload string) (*SendSingleMessageResponse, error) {
 	body := make(map[string]interface{})
 	body["msg"] = msg
-	dict, err := this.send_single_message(from, to, "0", body, option, pushcontent, payload)
+	dict, err := this.sendSingleMessage(from, to, "0", body, option, pushcontent, payload)
 	if err != nil {
 		return nil, err
 	}
@@ -185,25 +185,25 @@ func (this *Netease_im) Send_single_text_message(from string, to string, msg str
 // @param string payload
 // @return *Send_singleessage_response
 // @return error
-func (this *Netease_im) Send_single_image_message(from string, to string, file_path string, option map[string]bool, pushcontent string, payload string) (*Send_singleessage_response, error) {
+func (this *NeteaseIm) SendSingleImageMessage(from string, to string, filePath string, option map[string]bool, pushcontent string, payload string) (*SendSingleMessageResponse, error) {
 	// 上传图片文件
-	upload_resp, err := this.Upload_image_multipart(file_path)
+	uploadResp, err := this.UploadImageMultipart(filePath)
 	if err != nil {
 		return nil, err
 	}
 
-	if upload_resp.Is_success() != true {
+	if uploadResp.IsSuccess() != true {
 		return nil, errors.New("upload file fail")
 	}
 	body := make(map[string]interface{})
-	body["name"] = upload_resp.Name
-	body["ext"] = upload_resp.Ext[1:]
-	body["md5"] = upload_resp.Md5
-	body["url"] = upload_resp.Url
-	body["w"] = upload_resp.W
-	body["h"] = upload_resp.H
-	body["size"] = upload_resp.Size
-	dict, err := this.send_single_message(from, to, "1", body, option, pushcontent, payload)
+	body["name"] = uploadResp.Name
+	body["ext"] = uploadResp.Ext[1:]
+	body["md5"] = uploadResp.Md5
+	body["url"] = uploadResp.Url
+	body["w"] = uploadResp.W
+	body["h"] = uploadResp.H
+	body["size"] = uploadResp.Size
+	dict, err := this.sendSingleMessage(from, to, "1", body, option, pushcontent, payload)
 	if err != nil {
 		return nil, err
 	}
@@ -211,10 +211,18 @@ func (this *Netease_im) Send_single_image_message(from string, to string, file_p
 }
 
 // 批量发送多人文本消息
-func (this *Netease_im) Send_multi_text_message(from string, to []string, msg string, option map[string]bool, pushcontent string, payload string) (*Send_multimessage_response, error) {
+// @param string from
+// @param []string to
+// @param string msg
+// @param map[string]bool option
+// @param string pushcontent
+// @param string payload
+// @return *sendMultimessageResponse
+// @return error
+func (this *NeteaseIm) SendMultiTextMessage(from string, to []string, msg string, option map[string]bool, pushcontent string, payload string) (*SendMultimessageResponse, error) {
 	body := make(map[string]interface{})
 	body["msg"] = msg
-	dict, err := this.send_multi_message(from, to, "0" ,body, option, pushcontent, payload)
+	dict, err := this.sendMultiMessage(from, to, "0" ,body, option, pushcontent, payload)
 	if err != nil {
 		return nil, err
 	}
@@ -222,25 +230,33 @@ func (this *Netease_im) Send_multi_text_message(from string, to []string, msg st
 }
 
 // 批量发送多人图片消息
-func (this *Netease_im) Send_multi_image_message(from string, to []string, file_path string, option map[string]bool, pushcontent string, payload string) (*Send_multimessage_response, error) {
-	upload_resp, err := this.Upload_image_multipart(file_path)
+// @param string from
+// @param []string to
+// @param string filePath
+// @param map[string]bool option
+// @param string pushcontent
+// @param string payload
+// @return SendMultimessageResponse
+// @return error
+func (this *NeteaseIm) SendMultiImageMessage(from string, to []string, filePath string, option map[string]bool, pushcontent string, payload string) (*SendMultimessageResponse, error) {
+	uploadResp, err := this.UploadImageMultipart(filePath)
 	if err != nil {
 		return nil, err
 	}
 
-	if upload_resp.Is_success() != true {
+	if uploadResp.IsSuccess() != true {
 		return nil, errors.New("upload file fail")
 	}
 
 	body := make(map[string]interface{})
-	body["name"] = upload_resp.Name
-	body["ext"] = upload_resp.Ext[1:]
-	body["md5"] = upload_resp.Md5
-	body["url"] = upload_resp.Url
-	body["w"] = upload_resp.W
-	body["h"] = upload_resp.H
-	body["size"] = upload_resp.Size
-	dict, err := this.send_multi_message(from, to, "1", body, option, pushcontent, payload)
+	body["name"] = uploadResp.Name
+	body["ext"] = uploadResp.Ext[1:]
+	body["md5"] = uploadResp.Md5
+	body["url"] = uploadResp.Url
+	body["w"] = uploadResp.W
+	body["h"] = uploadResp.H
+	body["size"] = uploadResp.Size
+	dict, err := this.sendMultiMessage(from, to, "1", body, option, pushcontent, payload)
 	if err != nil {
 		return nil, err
 	}
@@ -248,37 +264,41 @@ func (this *Netease_im) Send_multi_image_message(from string, to []string, file_
 }
 
 // 发送单条信息
-// @param from 发送者ID
-// @param to 接受者ID
-// @param msg_type 消息类型 0 文本 1 图片 2 语音 3 视频 4 地理位置 6 文件 100 自定义
-// @param body 消息体
+// @param string from 发送者ID
+// @param string to 接受者ID
+// @param string msgType 消息类型 0 文本 1 图片 2 语音 3 视频 4 地理位置 6 文件 100 自定义
+// @param map[string]interface{} body 消息体
+// @param map[string]bool option
+// @param string pushcontent
 // @param payload ios 推送对应的payload
-func (this *Netease_im) send_single_message(from string, to string, msg_type string, body map[string]interface{}, option map[string]bool, pushcontent string, payload string) (*Send_singleessage_response, error) {
-	form_value := url.Values{}
-	form_value.Add("from", from)
-	form_value.Add("ope", "0")
-	form_value.Add("to", to)
-	form_value.Add("type", msg_type)
-	json_body, err := json.Marshal(body)
+// @return SendSingleMessageResponse
+// @return error
+func (this *NeteaseIm) sendSingleMessage(from string, to string, msgType string, body map[string]interface{}, option map[string]bool, pushcontent string, payload string) (*SendSingleMessageResponse, error) {
+	formValue := url.Values{}
+	formValue.Add("from", from)
+	formValue.Add("ope", "0")
+	formValue.Add("to", to)
+	formValue.Add("type", msgType)
+	jsonBody, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	if this.Debug {
-		fmt.Printf("Send_single_message body =====> %s", string(json_body))
+		fmt.Printf("Send_single_message body =====> %s", string(jsonBody))
 	}
-	form_value.Add("body", string(json_body))
-	json_option, err := json.Marshal(option)
+	formValue.Add("body", string(jsonBody))
+	jsonOption, err := json.Marshal(option)
 	if err != nil {
 		return nil, err
 	}
 	if this.Debug {
-		fmt.Print("Send_single_message option =====> %s", string(json_option))
+		fmt.Print("Send_single_message option =====> %s", string(jsonOption))
 	}
-	form_value.Add("option", string(json_option))
-	form_value.Add("pushcontent", pushcontent)
-	form_value.Add("payload", payload)
+	formValue.Add("option", string(jsonOption))
+	formValue.Add("pushcontent", pushcontent)
+	formValue.Add("payload", payload)
 
-	response, err := this.request(SEND_SINGLE_MESSAGE_PATH, form_value)
+	response, err := this.request(SEND_SINGLE_MESSAGE_PATH, formValue)
 	if err != nil {
 		return nil, err
 	}
@@ -286,34 +306,43 @@ func (this *Netease_im) send_single_message(from string, to string, msg_type str
 		fmt.Print(fmt.Sprintf("Send_single_message result =====> %s\n", response))
 	}
 
-	dict, err := this.json_unserialize(new(Send_singleessage_response), response)
+	dict, err := this.json_unserialize(new(SendSingleMessageResponse), response)
 	if err != nil {
 		return nil, err
 	}
-	return dict.(*Send_singleessage_response), nil
+	return dict.(*SendSingleMessageResponse), nil
 }
 
 // 发送多条消息
-func (this *Netease_im) send_multi_message(from string, to []string, msg_type string, body map[string]interface{}, option map[string]bool, pushcontent string, payload string) (*Send_multimessage_response, error) {
-	form_value := url.Values{}
-	form_value.Add("fromAccid", from)
-	json_to, err := json.Marshal(to)
+// @param string from
+// @param []string to
+// @param string msgType
+// @param map[string]interface{} body
+// @param map[string]bool option
+// @param string pushcontent
+// @param string payload
+// @return SendMultimessageResponse
+// @return error
+func (this *NeteaseIm) sendMultiMessage(from string, to []string, msgType string, body map[string]interface{}, option map[string]bool, pushcontent string, payload string) (*SendMultimessageResponse, error) {
+	formValue := url.Values{}
+	formValue.Add("fromAccid", from)
+	jsonTo, err := json.Marshal(to)
 	if err != nil {
 		return nil, err
 	}
 	if this.Debug {
-		fmt.Printf("send_multi_message to =====> %s\n", string(json_to))
+		fmt.Printf("send_multi_message to =====> %s\n", string(jsonTo))
 	}
-	form_value.Add("toAccids", string(json_to))
-	form_value.Add("type", msg_type)
-	json_body, err := json.Marshal(body)
+	formValue.Add("toAccids", string(jsonTo))
+	formValue.Add("type", msgType)
+	jsonBody, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	if this.Debug {
-		fmt.Printf("send_multi_message body =====> %s\n", string(json_body))
+		fmt.Printf("send_multi_message body =====> %s\n", string(jsonBody))
 	}
-	form_value.Add("body", string(json_body))
+	formValue.Add("body", string(jsonBody))
 	json_option, err := json.Marshal(option)
 	if err != nil {
 		return nil, err
@@ -321,20 +350,20 @@ func (this *Netease_im) send_multi_message(from string, to []string, msg_type st
 	if this.Debug {
 		fmt.Print("Send_single_message option =====> %s", string(json_option))
 	}
-	form_value.Add("option", string(json_option))
-	form_value.Add("pushcontent", pushcontent)
-	form_value.Add("payload", payload)
+	formValue.Add("option", string(json_option))
+	formValue.Add("pushcontent", pushcontent)
+	formValue.Add("payload", payload)
 
-	response, err := this.request(SEND_MULTI_MESSAGE_PATH, form_value)
+	response, err := this.request(SEND_MULTI_MESSAGE_PATH, formValue)
 	if err != nil {
 		return nil, err
 	}
 	if this.Debug {
 		fmt.Print(fmt.Sprintf("Send_single_message result =====> %s\n", response))
 	}
-	dict, err := this.json_unserialize(new(Send_multimessage_response), response)
+	dict, err := this.json_unserialize(new(SendMultimessageResponse), response)
 	if err != nil {
 		return nil, err
 	}
-	return dict.(*Send_multimessage_response), nil
+	return dict.(*SendMultimessageResponse), nil
 }

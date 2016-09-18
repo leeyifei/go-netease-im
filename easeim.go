@@ -18,30 +18,33 @@ const (
 	REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded"
 )
 
-type Netease_response_interface interface {
-	Is_success() bool
-	Fail_code() int
-	Fail_reason() string
+type NeteaseResponseInterface interface {
+	IsSuccess() bool
+	FailCode() int
+	FailReason() string
 }
 
-type Netease_base_response struct {
+type NeteaseBaseResponse struct {
 	Code int `json:"code"`
 	Desc string `json:"desc, omitempty"`
 }
 
-func (this *Netease_base_response) Is_success() bool {
+// 请求是否成功
+func (this *NeteaseBaseResponse) IsSuccess() bool {
 	return this.Code == 200
 }
 
-func (this *Netease_base_response) Fail_code() int {
+// 错误码
+func (this *NeteaseBaseResponse) FailCode() int {
 	return this.Code
 }
 
-func (this *Netease_base_response) Fail_reason() string {
+// 错误内容
+func (this *NeteaseBaseResponse) FailReason() string {
 	return this.Desc
 }
 
-type Netease_im struct {
+type NeteaseIm struct {
 	AppKey    string
 	AppSecret string
 	Debug bool
@@ -51,25 +54,29 @@ type Netease_im struct {
 	checksum string
 }
 
-// construct function
-func Netease_im_instance(app_key string, app_secret string, debug bool) *Netease_im {
-	instance := new(Netease_im)
-	instance.AppKey = app_key
-	instance.AppSecret = app_secret
+// 构造函数
+func NeteaseImInstance(appKey string, appSecret string, debug bool) *NeteaseIm {
+	instance := new(NeteaseIm)
+	instance.AppKey = appKey
+	instance.AppSecret = appSecret
 	instance.Debug = debug
 	return instance
 }
 
-
-func (this *Netease_im) request(sub_path string, form_values url.Values) (string, error) {
-	body := ioutil.NopCloser(strings.NewReader(form_values.Encode()))
+// 请求云信API
+// @param string subPath
+// @param url.Values formValues
+// @return string
+// @return error
+func (this *NeteaseIm) request(subPath string, formValues url.Values) (string, error) {
+	body := ioutil.NopCloser(strings.NewReader(formValues.Encode()))
 	client := &http.Client{}
-	req, _ := http.NewRequest("POST", EASE_IM_HOST + sub_path, body)
+	req, _ := http.NewRequest("POST", EASE_IM_HOST + subPath, body)
 	req.Header.Add("Content-Type", REQUEST_CONTENT_TYPE)
 
-	this.get_nonce( 128 )
-	this.get_cur_time()
-	this.get_checksum()
+	this.getNonce( 128 )
+	this.getCurTime()
+	this.getChecksum()
 
 	req.Header.Add("AppKey", this.AppKey)
 	req.Header.Add("Nonce", this.nonce)
@@ -92,16 +99,22 @@ func (this *Netease_im) request(sub_path string, form_values url.Values) (string
 }
 
 
-func (this *Netease_im) json_unserialize(model Netease_response_interface, json_str string) (Netease_response_interface, error) {
-	err := json.Unmarshal([]byte(json_str), &model)
+// 云信JSON解析
+// @param NeteaseResponseInterface model
+// @param string jsonStr
+// @return *NeteaseResponseInterface
+// @return error
+func (this *NeteaseIm) json_unserialize(model NeteaseResponseInterface, jsonStr string) (NeteaseResponseInterface, error) {
+	err := json.Unmarshal([]byte(jsonStr), &model)
 	if err != nil {
 		return nil, err
 	}
 	return model, nil
 }
 
-//generate nonce string
-func (this *Netease_im) get_nonce(length int) {
+// 生成指定长度的随机数
+// @param int length
+func (this *NeteaseIm) getNonce(length int) {
 	str := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	bytes := []byte(str)
 	result := []byte{}
@@ -112,21 +125,20 @@ func (this *Netease_im) get_nonce(length int) {
 	this.nonce = string(result)
 }
 
-
-//generate UTC time
-func (this *Netease_im) get_cur_time() {
-	var cur_str string
+// 获取当前时间戳
+func (this *NeteaseIm) getCurTime() {
+	var curStr string
 	cur := time.Now().Unix()
-	cur_str = strconv.FormatInt(cur, 10)
-	this.curtime = cur_str
+	curStr = strconv.FormatInt(cur, 10)
+	this.curtime = curStr
 }
 
 
-//generate sha1 hex string
-func (this *Netease_im) get_checksum() {
-	init_string := this.AppSecret + this.nonce + this.curtime
-	sha1_encoder := sha1.New()
-	sha1_encoder.Write([]byte(init_string))
-	binary_string := sha1_encoder.Sum(nil)
-	this.checksum = fmt.Sprintf("%x", binary_string)
+// 生成签名
+func (this *NeteaseIm) getChecksum() {
+	initString := this.AppSecret + this.nonce + this.curtime
+	sha1Encoder := sha1.New()
+	sha1Encoder.Write([]byte(initString))
+	binaryString := sha1Encoder.Sum(nil)
+	this.checksum = fmt.Sprintf("%x", binaryString)
 }
